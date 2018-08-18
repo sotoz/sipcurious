@@ -7,8 +7,8 @@ GOGET=$(GOCMD) get
 BINARY_NAME=sipcurious
 BINARY_UNIX=$(BINARY_NAME)_unix
 PROJECT=github.com/sotoz/sipcurious/cmd/sipcurious
-
-all: deps test build
+DEP_VERSION=0.4.1
+all: test build
 build:
 	$(GOBUILD) -o $(BINARY_NAME) -v $(PROJECT)
 test:
@@ -21,7 +21,7 @@ run:
 	$(GOBUILD) -o $(BINARY_NAME) -v ./...
 	./$(BINARY_NAME)
 deps:
-	$(GOGET) dep
+	curl -L -s https://github.com/golang/dep/releases/download/v$(DEP_VERSION)/dep-linux-amd64 -o $GOPATH/bin/dep
 	dep ensure
 
 build-linux:
