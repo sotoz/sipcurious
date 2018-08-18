@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
 	"text/tabwriter"
 
 	"github.com/marv2097/siprocket"
@@ -45,45 +44,20 @@ func main() {
 		errorOut(fmt.Sprintf("cannot parse SIP trace: %s", err))
 	}
 
-	// Parse the sip data
-	var sipPacket siprocket.SipMsg
-	var fp []siprocket.SipMsg
-
-	for _, packet := range trace.Packets {
-		d := packet.Data
-		if d == nil {
-			warnOut("unexpected packet data")
-			continue
-		}
-
-		td := d.LinkData().InternetData().TransportData()
-		if td == nil {
-			warnOut("unexpected transport data")
-			continue
-		}
-
-		sipPacket = siprocket.Parse(td)
-		if sipTo == "" {
-			if strings.Contains(string(sipPacket.From.User), sipFrom) {
-				fp = append(fp, sipPacket)
-			}
-			continue
-		}
-		if sipFrom == "" {
-			if strings.Contains(string(sipPacket.To.User), sipTo) {
-				fp = append(fp, sipPacket)
-			}
-			continue
-		}
+	// Search the sip data
+	fp, err := parseSIPTrace(trace, sipTo, sipFrom)
+	if err != nil {
+		errorOut(err.Error())
 	}
 
-	fmt.Printf("Found %v packets\n", len(fp))
+	showResults(fp)
+}
 
+func showResults(fp []siprocket.SipMsg) {
+	fmt.Printf("Found %v packets\n", len(fp))
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
-
 	fmt.Fprintln(w, fmt.Sprintf("Info\tCallID\tFrom\tTo\t"))
-
 	var info string
 	for _, pk := range fp {
 		if len(string(pk.Req.Method)) == 0 {
@@ -94,13 +68,4 @@ func main() {
 		fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t", info, string(pk.CallId.Value), string(pk.From.User), string(pk.To.User)))
 	}
 	w.Flush()
-}
-
-func errorOut(msg string) {
-	fmt.Printf("error: %s\n", msg)
-	os.Exit(-1)
-}
-
-func warnOut(msg string) {
-	fmt.Printf("warning: %s\n", msg)
 }
