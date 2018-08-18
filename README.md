@@ -12,17 +12,15 @@ INVITE		533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
 ACK		533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
 ```
 
-### Download precompiled binaries
-You can download the precompiled binaries from 
-- https://github.com/sotoz/sipcurious/binaries/sipcurious_linux_x86.tar.gz
-- https://github.com/sotoz/sipcurious/binaries/sipcurious_darwin_x86.tar.gz
-
 ### Building from source
 ```
 $ git clone git@github.com:sotoz/sipcurious.git
 $ go build -o sipcurious github.com/sotoz/sipcurious/cmd/sipcurious
 ```
-
+Or instead of doing the `go build`, you can use the Makefile by doing a
+```
+$ make all
+```
 ## Todo:
 - Parse more than one files at the same time
 - Add filters based on Request URI, Source IP.
