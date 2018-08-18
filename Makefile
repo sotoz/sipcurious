@@ -8,7 +8,7 @@ BINARY_NAME=sipcurious
 BINARY_UNIX=$(BINARY_NAME)_unix
 PROJECT=github.com/sotoz/sipcurious/cmd/sipcurious
 
-all: test build
+all: deps test build
 build:
 	$(GOBUILD) -o $(BINARY_NAME) -v $(PROJECT)
 test:
