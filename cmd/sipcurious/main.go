@@ -6,16 +6,17 @@ import (
 	"os"
 	"strings"
 
+	"text/tabwriter"
+
 	"github.com/marv2097/siprocket"
 )
 
 var (
 	file = flag.String("file", "", "The SIP pcap file that will be parsed")
-	to = flag.String("to", "", "SIP `To:` destination")
+	to   = flag.String("to", "", "SIP `To:` destination")
 	from = flag.String("from", "", "SIP `From:` destination")
 	help = flag.Bool("help", false, "Display usage help")
 )
-
 
 func main() {
 	flag.Usage = func() {
@@ -41,7 +42,7 @@ func main() {
 
 	trace, err := parsePcapFile(*file)
 	if err != nil {
-		errorOut(fmt.Sprintf("cannot parse SIP trace: %s",err))
+		errorOut(fmt.Sprintf("cannot parse SIP trace: %s", err))
 	}
 
 	// Parse the sip data
@@ -62,18 +63,37 @@ func main() {
 		}
 
 		sipPacket = siprocket.Parse(td)
-		if string(sipPacket.Req.Method) == "INVITE" {
-			if sipTo == string(sipPacket.To.User) || sipFrom == string(sipPacket.From.User) {
+		if sipTo == "" {
+			if strings.Contains(string(sipPacket.From.User), sipFrom) {
 				fp = append(fp, sipPacket)
 			}
+			continue
 		}
-
+		if sipFrom == "" {
+			if strings.Contains(string(sipPacket.To.User), sipTo) {
+				fp = append(fp, sipPacket)
+			}
+			continue
+		}
 	}
 
 	fmt.Printf("Found %v packets\n", len(fp))
+
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
+
+	fmt.Fprintln(w, fmt.Sprintf("Info\tCallID\tFrom\tTo\t"))
+
+	var info string
 	for _, pk := range fp {
-		fmt.Printf("CallID: %s\tFrom: %s\tTo: %s\n", string(pk.CallId.Value), string(pk.From.User), string(pk.To.User))
+		if len(string(pk.Req.Method)) == 0 {
+			info = fmt.Sprintf("%s %s", pk.Req.StatusCode, pk.Req.StatusDesc)
+		} else {
+			info = fmt.Sprintf("%s", string(pk.Req.Method))
+		}
+		fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t", info, string(pk.CallId.Value), string(pk.From.User), string(pk.To.User)))
 	}
+	w.Flush()
 }
 
 func errorOut(msg string) {
