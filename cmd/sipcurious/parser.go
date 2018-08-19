@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"os"
-	"strings"
 
 	"github.com/marv2097/siprocket"
 	"github.com/sotoz/gopcap/pkg/gopcap"
@@ -22,10 +21,11 @@ func parsePcapFile(file string) (gopcap.PcapFile, error) {
 	return parsed, nil
 }
 
-func parseSIPTrace(trace gopcap.PcapFile, sipTo string, sipFrom string) ([]siprocket.SipMsg, error) {
-	var fp []siprocket.SipMsg
+func parseSIPTrace(trace gopcap.PcapFile) ([]Result, error) {
+	var results []Result
 	for _, packet := range trace.Packets {
 		d := packet.Data
+		packetTimestamp := packet.Timestamp
 		if d == nil {
 			warnOut("unexpected packet data")
 			continue
@@ -38,18 +38,40 @@ func parseSIPTrace(trace gopcap.PcapFile, sipTo string, sipFrom string) ([]sipro
 		}
 
 		sipPacket := siprocket.Parse(td)
-		if sipTo == "" {
-			if strings.Contains(string(sipPacket.From.User), sipFrom) {
-				fp = append(fp, sipPacket)
+
+		filters := []Filter{ToFilter{}, FromFilter{}}
+		for _, filter := range filters {
+			if r := filter.Search(sipPacket); r != nil {
+				r.Timestamp = packetTimestamp
+				results = append(results, *r)
 			}
-			continue
 		}
-		if sipFrom == "" {
-			if strings.Contains(string(sipPacket.To.User), sipTo) {
-				fp = append(fp, sipPacket)
-			}
-			continue
-		}
+
 	}
-	return fp, nil
+	return results, nil
 }
+
+//
+// type UniqueFilter string
+//
+// const (
+// 	fromUniqueFilter UniqueFilter = "from"
+// 	toUniqueFilter   UniqueFilter = "to"
+// )
+
+//
+// func contains(ap SIPMsgs, ufilter UniqueFilter, f string) bool {
+// 	for _, s := range ap {
+// 		switch ufilter {
+// 		case "from":
+// 			if string(s.From.User) == f {
+// 				return true
+// 			}
+// 		case "to":
+// 			if string(s.To.User) == f {
+// 				return true
+// 			}
+// 		}
+// 	}
+// 	return false
+// }
