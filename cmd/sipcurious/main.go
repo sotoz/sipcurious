@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -33,6 +34,9 @@ func main() {
 	if *file == "" {
 		errorOut("you need to specify the file with --file")
 	}
+
+	*from = strings.ToLower(*from)
+	*to = strings.ToLower(*to)
 
 	trace, err := parsePcapFile(*file)
 	if err != nil {

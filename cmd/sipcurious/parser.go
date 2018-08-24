@@ -39,14 +39,7 @@ func parseSIPTrace(trace gopcap.PcapFile) ([]Result, error) {
 
 		sipPacket := siprocket.Parse(td)
 
-		filters := []Filter{ToFilter{}, FromFilter{}}
-		for _, filter := range filters {
-			if r := filter.Search(sipPacket); r != nil {
-				r.Timestamp = packetTimestamp
-				results = append(results, *r)
-			}
-		}
-
+		results = searchFilters(sipPacket, packetTimestamp, results)
 	}
 	return results, nil
 }

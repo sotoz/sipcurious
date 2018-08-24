@@ -26,6 +26,9 @@ type FromFilter struct{}
 type ToFilter struct{}
 
 func (ff FromFilter) Search(sipPacket siprocket.SipMsg) *Result {
+	if *from == "" {
+		return nil
+	}
 	var r Result
 	if strings.Contains(strings.ToLower(string(sipPacket.From.User)), *from) {
 		r.From = string(sipPacket.From.User)
@@ -46,6 +49,9 @@ func (ff FromFilter) Exists(s string) bool {
 }
 
 func (tf ToFilter) Search(sipPacket siprocket.SipMsg) *Result {
+	if *to == "" {
+		return nil
+	}
 	var r Result
 
 	if strings.Contains(strings.ToLower(string(sipPacket.To.User)), *to) {
@@ -62,4 +68,15 @@ func (tf ToFilter) Search(sipPacket siprocket.SipMsg) *Result {
 func (tf ToFilter) Exists(s string) bool {
 
 	return false
+}
+
+func searchFilters(sipPacket siprocket.SipMsg, packetTimestamp time.Duration, results []Result) []Result {
+	filters := []Filter{ToFilter{}, FromFilter{}}
+	for _, filter := range filters {
+		if r := filter.Search(sipPacket); r != nil {
+			r.Timestamp = packetTimestamp
+			results = append(results, *r)
+		}
+	}
+	return results
 }
