@@ -7,75 +7,90 @@ import (
 	"github.com/marv2097/siprocket"
 )
 
+// Result describes a Result struct.
 type Result struct {
-	From              string
-	To                string
-	CallID            string
+	From              []byte
+	To                []byte
+	CallID            []byte
 	Timestamp         time.Duration
-	Method            string
-	StatusCode        string
-	StatusDescription string
+	Method            []byte
+	StatusCode        []byte
+	StatusDescription []byte
 }
 
+// Filter serves as an interface for all filters that can be attached on a siptrace.
 type Filter interface {
-	Search(siprocket.SipMsg) *Result
-	Exists(string) bool
+	Search(siprocket.SipMsg, chan<- *Result)
 }
 
-type FromFilter struct{}
-type ToFilter struct{}
+// FromFilter is a placeholder struct for the filter operations for From.
+type FromFilter struct {
+	found bool
+}
 
-func (ff FromFilter) Search(sipPacket siprocket.SipMsg) *Result {
+// ToFilter is a placeholder struct for the filter operations for To.
+type ToFilter struct {
+	found bool
+}
+
+// Search will search inside the sipPacket whether the from filter exists.
+func (ff FromFilter) Search(sipPacket siprocket.SipMsg, out chan<- *Result) {
 	if *from == "" {
-		return nil
+		out <- nil
 	}
 	var r Result
 	if strings.Contains(strings.ToLower(string(sipPacket.From.User)), *from) {
-		r.From = string(sipPacket.From.User)
-		r.To = string(sipPacket.To.User)
-		r.CallID = string(sipPacket.CallId.Value)
-		r.StatusCode = string(sipPacket.Req.StatusCode)
-		r.StatusDescription = string(sipPacket.Req.StatusDesc)
+		r.From = sipPacket.From.User
+		r.To = sipPacket.To.User
+		r.CallID = sipPacket.CallId.Value
+		r.StatusCode = sipPacket.Req.StatusCode
+		r.StatusDescription = sipPacket.Req.StatusDesc
 
-		return &r
+		if *unique {
+			ff.found = true
+		}
+		out <- &r
 	}
 
-	return nil
+	out <- nil
 }
 
-func (ff FromFilter) Exists(s string) bool {
-
-	return false
-}
-
-func (tf ToFilter) Search(sipPacket siprocket.SipMsg) *Result {
+// Search will search for the <to> inside the sipPacket
+func (tf ToFilter) Search(sipPacket siprocket.SipMsg, out chan<- *Result) {
 	if *to == "" {
-		return nil
+		out <- nil
 	}
 	var r Result
 
 	if strings.Contains(strings.ToLower(string(sipPacket.To.User)), *to) {
-		r.From = string(sipPacket.From.User)
-		r.To = string(sipPacket.To.User)
-		r.CallID = string(sipPacket.CallId.Value)
-		r.StatusCode = string(sipPacket.Req.StatusCode)
-		r.StatusDescription = string(sipPacket.Req.StatusDesc)
-		return &r
+		r.From = sipPacket.From.User
+		r.To = sipPacket.To.User
+		r.CallID = sipPacket.CallId.Value
+		r.StatusCode = sipPacket.Req.StatusCode
+		r.StatusDescription = sipPacket.Req.StatusDesc
+
+		if *unique {
+			tf.found = true
+		}
+		out <- &r
 	}
-	return nil
+	out <- nil
 }
 
-func (tf ToFilter) Exists(s string) bool {
+func searchFilters(sipPackets []siprocket.SipMsg) []Result {
+	var results []Result
 
-	return false
-}
+	for _, sipPacket := range sipPackets {
+		filters := []Filter{ToFilter{}, FromFilter{}}
+		for _, filter := range filters {
+			rc := make(chan *Result)
 
-func searchFilters(sipPacket siprocket.SipMsg, packetTimestamp time.Duration, results []Result) []Result {
-	filters := []Filter{ToFilter{}, FromFilter{}}
-	for _, filter := range filters {
-		if r := filter.Search(sipPacket); r != nil {
-			r.Timestamp = packetTimestamp
-			results = append(results, *r)
+			go filter.Search(sipPacket, rc)
+			res := <-rc
+			if res == nil {
+				continue
+			}
+			results = append(results, *res)
 		}
 	}
 	return results

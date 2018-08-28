@@ -3,19 +3,26 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:5e3328996b72ca8ba464b57b42959fc6772d967d40d69a7cf835323b88948c03"
   name = "github.com/marv2097/siprocket"
   packages = ["."]
+  pruneopts = "UT"
   revision = "37a981bcc5c54a3309fad899b82fe122de5e1b6c"
 
 [[projects]]
   branch = "master"
+  digest = "1:013510b4b710fb6a271b97046f68a3568c340f5bf7b7082baa3266e1d6b19114"
   name = "github.com/sotoz/gopcap"
   packages = ["pkg/gopcap"]
+  pruneopts = "UT"
   revision = "5e9290d3e284eb5f6403156dfa55e603dc78a2b6"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5483d5861d23a2072d9ab9cc6f0362384937c9622651be07d9ae238d1ae33e7f"
+  input-imports = [
+    "github.com/marv2097/siprocket",
+    "github.com/sotoz/gopcap/pkg/gopcap",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -12,7 +12,7 @@ var (
 	file   = flag.String("file", "", "The SIP pcap file that will be parsed")
 	to     = flag.String("to", "", "SIP To: Header")
 	from   = flag.String("from", "", "SIP From: Header")
-	unique = flag.Bool("unique", false, "Show only the first instance of found packets based on a unique call-id. Usually this is the INVITE.")
+	unique = flag.Bool("unique", false, "Show only the first instance of found packets based on a unique call-id. Usually this is the INVITE. This parameter will make sipcurious to be faster and return the first result for each occurence.")
 	help   = flag.Bool("help", false, "Display usage help")
 )
 
@@ -43,16 +43,24 @@ func main() {
 		errorOut(fmt.Sprintf("cannot parse SIP trace: %s", err))
 	}
 
-	// Search the sip data
+	// Parse the the SIP data
 	fp, err := parseSIPTrace(trace)
 	if err != nil {
 		errorOut(err.Error())
 	}
 
-	showResults(fp)
+	// Search the SIP packets for the filters
+	fr := searchFilters(fp)
+
+	showResults(fr)
 }
 
 func showResults(fp []Result) {
+	totalPackets := len(fp)
+	if totalPackets <= 0 {
+		fmt.Println("No Packets found for the filters you provided.")
+		os.Exit(0)
+	}
 	fmt.Printf("Found %v packets\n", len(fp))
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
