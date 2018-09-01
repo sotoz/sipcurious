@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"os"
-	"strings"
 
 	"github.com/marv2097/siprocket"
 	"github.com/sotoz/gopcap/pkg/gopcap"
@@ -22,8 +21,8 @@ func parsePcapFile(file string) (gopcap.PcapFile, error) {
 	return parsed, nil
 }
 
-func parseSIPTrace(trace gopcap.PcapFile, sipTo string, sipFrom string) ([]siprocket.SipMsg, error) {
-	var fp []siprocket.SipMsg
+func parseSIPTrace(trace gopcap.PcapFile) ([]siprocket.SipMsg, error) {
+	var results []siprocket.SipMsg
 	for _, packet := range trace.Packets {
 		d := packet.Data
 		if d == nil {
@@ -38,18 +37,7 @@ func parseSIPTrace(trace gopcap.PcapFile, sipTo string, sipFrom string) ([]sipro
 		}
 
 		sipPacket := siprocket.Parse(td)
-		if sipTo == "" {
-			if strings.Contains(string(sipPacket.From.User), sipFrom) {
-				fp = append(fp, sipPacket)
-			}
-			continue
-		}
-		if sipFrom == "" {
-			if strings.Contains(string(sipPacket.To.User), sipTo) {
-				fp = append(fp, sipPacket)
-			}
-			continue
-		}
+		results = append(results, sipPacket)
 	}
-	return fp, nil
+	return results, nil
 }
