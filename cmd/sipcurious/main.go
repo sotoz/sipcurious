@@ -16,6 +16,11 @@ var (
 	help   = flag.Bool("help", false, "Display usage help")
 )
 
+type searchParams struct {
+	to   string
+	from string
+}
+
 func main() {
 	flag.Usage = func() {
 		fmt.Printf("Usage: %s \n", os.Args[0])
@@ -49,8 +54,12 @@ func main() {
 		errorOut(err.Error())
 	}
 
+	sp := searchParams{
+		*from,
+		*to,
+	}
 	// Search the SIP packets for the filters
-	fr := searchFilters(fp)
+	fr := searchFilters(fp, sp)
 
 	showResults(fr)
 }
