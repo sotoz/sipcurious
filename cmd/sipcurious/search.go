@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strings"
 	"time"
 
@@ -47,7 +46,6 @@ func (ff FromFilter) Search(sipPacket siprocket.SipMsg, from string, out chan<- 
 	if from == "" {
 		out <- nil
 	}
-	log.Println(string(sipPacket.From.User))
 
 	var r Result
 	if strings.Contains(strings.ToLower(string(sipPacket.From.User)), from) {
@@ -56,7 +54,6 @@ func (ff FromFilter) Search(sipPacket siprocket.SipMsg, from string, out chan<- 
 		r.CallID = sipPacket.CallId.Value
 		r.StatusCode = sipPacket.Req.StatusCode
 		r.StatusDescription = sipPacket.Req.StatusDesc
-		log.Println("edo")
 		if *unique {
 			ff.found = true
 		}
@@ -100,7 +97,6 @@ func searchFilters(sipPackets []siprocket.SipMsg, sp searchParams) []Result {
 		filters := []Filter{ToFilter{}, FromFilter{}}
 		for _, filter := range filters {
 			rc := make(chan *Result)
-			log.Println("edo222422")
 
 			go filter.Search(sipPacket, filter.GetCmdParameter(sp), rc)
 			res := <-rc
