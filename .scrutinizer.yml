@@ -1,0 +1,14 @@
+build:
+  environment:
+      go: 'go1.9.2' or 'go1.8'
+  nodes:
+    coverage:
+      tests:
+        override:
+          - command: ./my-test-run
+            coverage:
+              file: path/to/coverage-data
+
+              # These formats are supported:
+              # clover, cobertura, jacoco, python-cc, ruby-cc, go-cc
+              format: name-of-format

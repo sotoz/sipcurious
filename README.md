@@ -1,4 +1,4 @@
-# sipcurious [![Build Status](https://travis-ci.org/sotoz/sipcurious.svg?branch=master)](https://travis-ci.org/sotoz/sipcurious)
+# sipcurious [![Build Status](https://travis-ci.org/sotoz/sipcurious.svg?branch=master)](https://travis-ci.org/sotoz/sipcurious) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sotoz/sipcurious/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/sotoz/sipcurious/?branch=master) [![Code Coverage](https://scrutinizer-ci.com/g/sotoz/sipcurious/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/sotoz/sipcurious/?branch=master)
 Sipcurious is a command line utility that parses SIP pcap files and filters out SIP packets based on the parameters given.
 It can be used for searching if a number exists in dialogs in big pcap files that are hard to open with wireshark or other SIP trace viewing utilities.
 
