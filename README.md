@@ -22,6 +22,7 @@ Or instead of doing the `go build`, you can use the Makefile by doing a
 $ make all
 ```
 ## Todo:
-- Parse more than one files at the same time
+- Correctly show the timestamp of a packet.
+- Parse more than one files at the same time.
 - Add filters based on Request URI, Source IP.
-- Properly show results per dialog and show the dialog in a graph as well
+- Properly show results per dialog and show the dialog in a graph as well.
