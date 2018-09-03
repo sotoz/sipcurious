@@ -1,4 +1,5 @@
-# sipcurious [![Build Status](https://travis-ci.org/sotoz/sipcurious.svg?branch=master)](https://travis-ci.org/sotoz/sipcurious) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sotoz/sipcurious/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/sotoz/sipcurious/?branch=master) [![Code Coverage](https://scrutinizer-ci.com/g/sotoz/sipcurious/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/sotoz/sipcurious/?branch=master)
+# sipcurious [![Build Status](https://travis-ci.org/sotoz/sipcurious.svg?branch=master)](https://travis-ci.org/sotoz/sipcurious) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sotoz/sipcurious/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/sotoz/sipcurious/?branch=master) [![Code Coverage](https://scrutinizer-ci.com/g/sotoz/sipcurious/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/sotoz/sipcurious/?branch=master)[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
+
 Sipcurious is a command line utility that parses SIP pcap files and filters out SIP packets based on the parameters given.
 It can be used for searching if a number exists in dialogs in big pcap files that are hard to open with wireshark or other SIP trace viewing utilities.
 
@@ -26,3 +27,9 @@ $ make all
 - Parse more than one files at the same time.
 - Add filters based on Request URI, Source IP.
 - Properly show results per dialog and show the dialog in a graph as well.
+
+## Copyright
+Sotiris Gkanouris 2018. Read the LICENSE to learn about the GNU GENERAL PUBLIC LICENSE.
+
+## Contribution
+Feel free to add issues, questions, pull requests. Just fork it, code, and create a PR and I'll be happy to review and merge.
