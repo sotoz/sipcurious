@@ -70,7 +70,11 @@ func showResults(fp []Result) {
 		fmt.Println("No Packets found for the filters you provided.")
 		os.Exit(0)
 	}
-	fmt.Printf("Found %v packets\n", len(fp))
+	if *unique {
+		fmt.Println("The --unique flag was used. Showing only the first packet found.")
+	} else {
+		fmt.Printf("Found %v packets\n", len(fp))
+	}
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
 	fmt.Fprintln(w, fmt.Sprintf("Time\tInfo\tCallID\tFrom\tTo\t"))
@@ -81,7 +85,7 @@ func showResults(fp []Result) {
 		} else {
 			info = fmt.Sprintf("%s", string(pk.Method))
 		}
-		fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t", pk.Timestamp, info, pk.CallID, pk.From, pk.To))
+		fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t", info, pk.CallID, pk.From, pk.To))
 	}
 	w.Flush()
 }

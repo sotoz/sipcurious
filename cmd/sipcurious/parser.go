@@ -27,7 +27,6 @@ func parseSIPTrace(trace gopcap.PcapFile) ([]siprocket.SipMsg, error) {
 	for _, packet := range trace.Packets {
 		d := packet.Data
 		if d == nil {
-			warnOut("unexpected packet data")
 			continue
 		}
 

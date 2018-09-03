@@ -54,9 +54,7 @@ func (ff FromFilter) Search(sipPacket siprocket.SipMsg, from string, out chan<- 
 		r.CallID = sipPacket.CallId.Value
 		r.StatusCode = sipPacket.Req.StatusCode
 		r.StatusDescription = sipPacket.Req.StatusDesc
-		if *unique {
-			ff.found = true
-		}
+
 		out <- &r
 	}
 
@@ -82,9 +80,6 @@ func (tf ToFilter) Search(sipPacket siprocket.SipMsg, to string, out chan<- *Res
 		r.StatusCode = sipPacket.Req.StatusCode
 		r.StatusDescription = sipPacket.Req.StatusDesc
 
-		if *unique {
-			tf.found = true
-		}
 		out <- &r
 	}
 	out <- nil
@@ -104,6 +99,9 @@ func searchFilters(sipPackets []siprocket.SipMsg, sp searchParams) []Result {
 				continue
 			}
 			results = append(results, *res)
+		}
+		if *unique && len(results) > 0 {
+			break
 		}
 	}
 	return results
