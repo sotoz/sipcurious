@@ -13,6 +13,14 @@ INVITE		533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
 ACK		533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
 ```
 
+Another example of usage that shows the `unique` flag and the `callid` filter:
+```
+$ sipcurious --file cmd/sipcurious/aaa.pcap --callid 29858 -unique
+The --unique flag was used. Showing only the first packet found.
+Info    CallID                                  From            To
+        29858147-465b0752@29858051-465b07b2     35104723        35104723
+```
+
 ### Building from source
 ```
 $ git clone git@github.com:sotoz/sipcurious.git
@@ -26,7 +34,8 @@ $ make all
 - Correctly show the timestamp of a packet.
 - Parse more than one files at the same time.
 - Add filters based on Request URI, Source IP.
-- Properly show results per dialog and show the dialog in a graph as well.
+- Properly show results per SIP dialog and show the dialog in a graph as well.
+- Add a different export type (ex csv, json). Now it's just tabular data.
 
 ## Copyright
 Sotiris Gkanouris 2018. Read the LICENSE to learn about the GNU GENERAL PUBLIC LICENSE.
