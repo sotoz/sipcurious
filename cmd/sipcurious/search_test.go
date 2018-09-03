@@ -29,6 +29,7 @@ func TestSearchFilters(t *testing.T) {
 			searchParams{
 				"to456",
 				"from123",
+				"callidyolo",
 			},
 			[]Result{
 				{
@@ -59,6 +60,7 @@ func TestSearchFilters(t *testing.T) {
 			searchParams{
 				"yolo",
 				"swag",
+				"callidyolo",
 			},
 			nil,
 		},
@@ -80,27 +82,18 @@ func TestFromFilterSearch(t *testing.T) {
 	packet1.To.User = []byte("to456")
 	out := make(chan *Result)
 
-	type fields struct {
-		found bool
-		param string
-	}
 	type args struct {
 		sipPacket siprocket.SipMsg
 		from      string
 		out       chan<- *Result
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *Result
+		name string
+		args args
+		want *Result
 	}{
 		{
 			"from-filter-test-1-results",
-			fields{
-				true,
-				"123",
-			},
 			args{
 				packet1,
 				"123",
@@ -118,10 +111,6 @@ func TestFromFilterSearch(t *testing.T) {
 		},
 		{
 			"from-filter-test-2-no-results",
-			fields{
-				true,
-				"123",
-			},
 			args{
 				packet1,
 				"123",
@@ -132,10 +121,7 @@ func TestFromFilterSearch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ff := FromFilter{
-				found: tt.fields.found,
-				param: tt.fields.param,
-			}
+			ff := FromFilter{}
 			go ff.Search(tt.args.sipPacket, tt.args.from, tt.args.out)
 			res := <-out
 			if !reflect.DeepEqual(res, tt.want) {
@@ -152,27 +138,18 @@ func TestToFilterSearch(t *testing.T) {
 	packet1.To.User = []byte("to456")
 	out := make(chan *Result)
 
-	type fields struct {
-		found bool
-		param string
-	}
 	type args struct {
 		sipPacket siprocket.SipMsg
 		from      string
 		out       chan<- *Result
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *Result
+		name string
+		args args
+		want *Result
 	}{
 		{
 			"to-filter-test-1-results",
-			fields{
-				true,
-				"456",
-			},
 			args{
 				packet1,
 				"456",
@@ -190,10 +167,6 @@ func TestToFilterSearch(t *testing.T) {
 		},
 		{
 			"to-filter-test-2-no-results",
-			fields{
-				true,
-				"123",
-			},
 			args{
 				packet1,
 				"123",
@@ -204,11 +177,63 @@ func TestToFilterSearch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ff := ToFilter{
-				found: tt.fields.found,
-				param: tt.fields.param,
-			}
+			ff := ToFilter{}
 			go ff.Search(tt.args.sipPacket, tt.args.from, tt.args.out)
+			res := <-out
+			if !reflect.DeepEqual(res, tt.want) {
+				t.Errorf("\ngot : %v\nwant: %s", res, *tt.want)
+			}
+		})
+	}
+}
+func TestCallIdFilterSearch(t *testing.T) {
+	packet1 := siprocket.SipMsg{}
+	packet1.CallId.Value = []byte("wewantthiscallid")
+	packet1.From.User = []byte("from123")
+	packet1.To.User = []byte("to456")
+	out := make(chan *Result)
+
+	type args struct {
+		sipPacket siprocket.SipMsg
+		callid    string
+		out       chan<- *Result
+	}
+	tests := []struct {
+		name string
+		args args
+		want *Result
+	}{
+		{
+			"callid-filter-test-1-results",
+			args{
+				packet1,
+				"wewantthiscallid",
+				out,
+			},
+			&Result{
+				[]byte("from123"),
+				[]byte("to456"),
+				[]byte("wewantthiscallid"),
+				0 * time.Second,
+				nil,
+				nil,
+				nil,
+			},
+		},
+		{
+			"callid-filter-test-2-no-results",
+			args{
+				packet1,
+				"123",
+				out,
+			},
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ff := CallIdFilter{}
+			go ff.Search(tt.args.sipPacket, tt.args.callid, tt.args.out)
 			res := <-out
 			if !reflect.DeepEqual(res, tt.want) {
 				t.Errorf("\ngot : %v\nwant: %s", res, *tt.want)
@@ -218,29 +243,22 @@ func TestToFilterSearch(t *testing.T) {
 }
 
 func TestFromFilterGetCmdParameter(t *testing.T) {
-	type fields struct {
-		found bool
-		param string
-	}
+
 	type args struct {
 		s searchParams
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   string
+		name string
+		args args
+		want string
 	}{
 		{
 			"test-getcmdparameter-from",
-			fields{
-				true,
-				"from456",
-			},
 			args{
 				searchParams{
 					"to123",
 					"from456",
+					"callidyolo",
 				},
 			},
 			"from456",
@@ -248,10 +266,7 @@ func TestFromFilterGetCmdParameter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ff := FromFilter{
-				found: tt.fields.found,
-				param: tt.fields.param,
-			}
+			ff := FromFilter{}
 			if got := ff.GetCmdParameter(tt.args.s); got != tt.want {
 				t.Errorf("FromFilter.GetCmdParameter() = %v, want %v", got, tt.want)
 			}
@@ -260,39 +275,28 @@ func TestFromFilterGetCmdParameter(t *testing.T) {
 }
 
 func TestToFilterGetCmdParameter(t *testing.T) {
-	type fields struct {
-		found bool
-		param string
-	}
 	type args struct {
 		s searchParams
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   string
+		name string
+		args args
+		want string
 	}{
 		{
 			"test-getcmdparameter-to",
-			fields{
-				true,
-				"to123",
-			},
 			args{
 				searchParams{
 					"to123",
 					"from456",
+					"callidyolo",
 				},
 			},
 			"to123",
 		}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tf := ToFilter{
-				found: tt.fields.found,
-				param: tt.fields.param,
-			}
+			tf := ToFilter{}
 			if got := tf.GetCmdParameter(tt.args.s); got != tt.want {
 				t.Errorf("ToFilter.GetCmdParameter() = %v, want %v", got, tt.want)
 			}
