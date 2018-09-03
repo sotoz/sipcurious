@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/marv2097/siprocket"
@@ -16,7 +17,7 @@ func parsePcapFile(file string) (gopcap.PcapFile, error) {
 	pcapfile, _ := os.Open(file)
 	parsed, err := gopcap.Parse(pcapfile)
 	if err != nil {
-		return gopcap.PcapFile{}, errors.New("cannot parse the pcap file")
+		return gopcap.PcapFile{}, fmt.Errorf("cannot parse the pcap file: %s", err)
 	}
 	return parsed, nil
 }
