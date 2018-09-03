@@ -186,7 +186,7 @@ func TestToFilterSearch(t *testing.T) {
 		})
 	}
 }
-func TestCallIdFilterSearch(t *testing.T) {
+func TestCallIDFilterSearch(t *testing.T) {
 	packet1 := siprocket.SipMsg{}
 	packet1.CallId.Value = []byte("wewantthiscallid")
 	packet1.From.User = []byte("from123")
@@ -232,7 +232,7 @@ func TestCallIdFilterSearch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ff := CallIdFilter{}
+			ff := CallIDFilter{}
 			go ff.Search(tt.args.sipPacket, tt.args.callid, tt.args.out)
 			res := <-out
 			if !reflect.DeepEqual(res, tt.want) {

@@ -25,15 +25,13 @@ type Filter interface {
 }
 
 // FromFilter is a placeholder struct for the filter operations for From.
-type FromFilter struct {
-}
+type FromFilter struct{}
 
 // ToFilter is a placeholder struct for the filter operations for To.
-type ToFilter struct {
-}
+type ToFilter struct{}
 
-type CallIdFilter struct {
-}
+// CallIDFilter is a placeholder struct for the filter operation for Call-Id.
+type CallIDFilter struct{}
 
 // GetCmdParameter returns the command line parameter's value for that filter
 func (ff FromFilter) GetCmdParameter(s searchParams) string {
@@ -85,12 +83,12 @@ func (tf ToFilter) Search(sipPacket siprocket.SipMsg, to string, out chan<- *Res
 }
 
 // GetCmdParameter returns the command line parameter's value for that filter
-func (cidf CallIdFilter) GetCmdParameter(s searchParams) string {
+func (cidf CallIDFilter) GetCmdParameter(s searchParams) string {
 	return s.callid
 }
 
 // Search will search if the specified packet includes the call id that we are searching.
-func (cidf CallIdFilter) Search(sipPacket siprocket.SipMsg, cid string, out chan<- *Result) {
+func (cidf CallIDFilter) Search(sipPacket siprocket.SipMsg, cid string, out chan<- *Result) {
 	if cid == "" {
 		out <- nil
 	}
@@ -111,7 +109,7 @@ func searchFilters(sipPackets []siprocket.SipMsg, sp searchParams) []Result {
 	var results []Result
 
 	for _, sipPacket := range sipPackets {
-		filters := []Filter{ToFilter{}, FromFilter{}, CallIdFilter{}}
+		filters := []Filter{ToFilter{}, FromFilter{}, CallIDFilter{}}
 		for _, filter := range filters {
 			rc := make(chan *Result)
 
