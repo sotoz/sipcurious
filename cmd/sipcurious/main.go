@@ -12,13 +12,15 @@ var (
 	file   = flag.String("file", "", "The SIP pcap file that will be parsed")
 	to     = flag.String("to", "", "SIP To: Header")
 	from   = flag.String("from", "", "SIP From: Header")
-	unique = flag.Bool("unique", false, "Show only the first instance of found packets based on a unique call-id. Usually this is the INVITE. This parameter will make sipcurious to be faster and return the first result for each occurence.")
+	callid = flag.String("callid", "", "SIP Call-ID header")
+	unique = flag.Bool("unique", false, "Show only the first packet that satisfy the filters from the SIP trace. Usually this is the INVITE. This parameter will make sipcurious to be faster and return the first result for each occurence.")
 	help   = flag.Bool("help", false, "Display usage help")
 )
 
 type searchParams struct {
-	to   string
-	from string
+	to     string
+	from   string
+	callid string
 }
 
 func main() {
@@ -42,6 +44,7 @@ func main() {
 
 	*from = strings.ToLower(*from)
 	*to = strings.ToLower(*to)
+	*callid = strings.ToLower(*callid)
 
 	trace, err := parsePcapFile(*file)
 	if err != nil {
@@ -57,6 +60,7 @@ func main() {
 	sp := searchParams{
 		*from,
 		*to,
+		*callid,
 	}
 	// Search the SIP packets for the filters
 	fr := searchFilters(fp, sp)
@@ -77,7 +81,7 @@ func showResults(fp []Result) {
 	}
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
-	fmt.Fprintln(w, fmt.Sprintf("Time\tInfo\tCallID\tFrom\tTo\t"))
+	fmt.Fprintln(w, fmt.Sprintf("Info\tCallID\tFrom\tTo\t"))
 	var info string
 	for _, pk := range fp {
 		if len(pk.Method) == 0 {
