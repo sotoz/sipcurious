@@ -216,3 +216,86 @@ func TestToFilterSearch(t *testing.T) {
 		})
 	}
 }
+
+func TestFromFilterGetCmdParameter(t *testing.T) {
+	type fields struct {
+		found bool
+		param string
+	}
+	type args struct {
+		s searchParams
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+	}{
+		{
+			"test-getcmdparameter-from",
+			fields{
+				true,
+				"from456",
+			},
+			args{
+				searchParams{
+					"to123",
+					"from456",
+				},
+			},
+			"from456",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ff := FromFilter{
+				found: tt.fields.found,
+				param: tt.fields.param,
+			}
+			if got := ff.GetCmdParameter(tt.args.s); got != tt.want {
+				t.Errorf("FromFilter.GetCmdParameter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToFilterGetCmdParameter(t *testing.T) {
+	type fields struct {
+		found bool
+		param string
+	}
+	type args struct {
+		s searchParams
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+	}{
+		{
+			"test-getcmdparameter-to",
+			fields{
+				true,
+				"to123",
+			},
+			args{
+				searchParams{
+					"to123",
+					"from456",
+				},
+			},
+			"to123",
+		}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tf := ToFilter{
+				found: tt.fields.found,
+				param: tt.fields.param,
+			}
+			if got := tf.GetCmdParameter(tt.args.s); got != tt.want {
+				t.Errorf("ToFilter.GetCmdParameter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
