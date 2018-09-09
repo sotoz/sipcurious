@@ -14,7 +14,9 @@ func TestSearchFilters(t *testing.T) {
 	packet1.CallId.Value = []byte("callid")
 	packet1.From.User = []byte("from123")
 	packet1.To.User = []byte("to456")
-
+	packet1.From.Src = []byte("sip:from123@siptest.com")
+	packet1.To.Src = []byte("sip:to456@siptest.com")
+	packet1.Contact.Src = []byte("contact")
 	tests := []struct {
 		name       string
 		sipPackets []siprocket.SipMsg
@@ -33,22 +35,24 @@ func TestSearchFilters(t *testing.T) {
 			},
 			[]Result{
 				{
-					[]byte("from123"),
-					[]byte("to456"),
+					[]byte("sip:from123@siptest.com"),
+					[]byte("sip:to456@siptest.com"),
 					[]byte("callid"),
 					0 * time.Second,
 					nil,
 					nil,
 					nil,
+					[]byte("contact"),
 				},
 				{
-					[]byte("from123"),
-					[]byte("to456"),
+					[]byte("sip:from123@siptest.com"),
+					[]byte("sip:to456@siptest.com"),
 					[]byte("callid"),
 					0 * time.Second,
 					nil,
 					nil,
 					nil,
+					[]byte("contact"),
 				},
 			},
 		},
@@ -80,6 +84,9 @@ func TestFromFilterSearch(t *testing.T) {
 	packet1.CallId.Value = []byte("callid")
 	packet1.From.User = []byte("from123")
 	packet1.To.User = []byte("to456")
+	packet1.From.Src = []byte("sip:from123@siptest.com")
+	packet1.To.Src = []byte("sip:to456@siptest.com")
+	packet1.Contact.Src = []byte("contact")
 	out := make(chan *Result)
 
 	type args struct {
@@ -100,13 +107,14 @@ func TestFromFilterSearch(t *testing.T) {
 				out,
 			},
 			&Result{
-				[]byte("from123"),
-				[]byte("to456"),
+				[]byte("sip:from123@siptest.com"),
+				[]byte("sip:to456@siptest.com"),
 				[]byte("callid"),
 				0 * time.Second,
 				nil,
 				nil,
 				nil,
+				[]byte("contact"),
 			},
 		},
 		{
@@ -125,7 +133,7 @@ func TestFromFilterSearch(t *testing.T) {
 			go ff.Search(tt.args.sipPacket, tt.args.from, tt.args.out)
 			res := <-out
 			if !reflect.DeepEqual(res, tt.want) {
-				t.Errorf("\ngot : %v\nwant: %s", res, *tt.want)
+				t.Errorf("\ngot : %s\nwant: %s", res, *tt.want)
 			}
 		})
 	}
@@ -136,6 +144,9 @@ func TestToFilterSearch(t *testing.T) {
 	packet1.CallId.Value = []byte("callid")
 	packet1.From.User = []byte("from123")
 	packet1.To.User = []byte("to456")
+	packet1.From.Src = []byte("sip:from123@siptest.com")
+	packet1.To.Src = []byte("sip:to456@siptest.com")
+	packet1.Contact.Src = []byte("contact")
 	out := make(chan *Result)
 
 	type args struct {
@@ -156,13 +167,14 @@ func TestToFilterSearch(t *testing.T) {
 				out,
 			},
 			&Result{
-				[]byte("from123"),
-				[]byte("to456"),
+				[]byte("sip:from123@siptest.com"),
+				[]byte("sip:to456@siptest.com"),
 				[]byte("callid"),
 				0 * time.Second,
 				nil,
 				nil,
 				nil,
+				[]byte("contact"),
 			},
 		},
 		{
@@ -181,7 +193,7 @@ func TestToFilterSearch(t *testing.T) {
 			go ff.Search(tt.args.sipPacket, tt.args.from, tt.args.out)
 			res := <-out
 			if !reflect.DeepEqual(res, tt.want) {
-				t.Errorf("\ngot : %v\nwant: %s", res, *tt.want)
+				t.Errorf("\ngot : %s\nwant: %s", res, *tt.want)
 			}
 		})
 	}
@@ -191,6 +203,9 @@ func TestCallIDFilterSearch(t *testing.T) {
 	packet1.CallId.Value = []byte("wewantthiscallid")
 	packet1.From.User = []byte("from123")
 	packet1.To.User = []byte("to456")
+	packet1.From.Src = []byte("sip:from123@siptest.com")
+	packet1.To.Src = []byte("sip:to456@siptest.com")
+	packet1.Contact.Src = []byte("contact")
 	out := make(chan *Result)
 
 	type args struct {
@@ -211,13 +226,14 @@ func TestCallIDFilterSearch(t *testing.T) {
 				out,
 			},
 			&Result{
-				[]byte("from123"),
-				[]byte("to456"),
+				[]byte("sip:from123@siptest.com"),
+				[]byte("sip:to456@siptest.com"),
 				[]byte("wewantthiscallid"),
 				0 * time.Second,
 				nil,
 				nil,
 				nil,
+				[]byte("contact"),
 			},
 		},
 		{
@@ -236,7 +252,7 @@ func TestCallIDFilterSearch(t *testing.T) {
 			go ff.Search(tt.args.sipPacket, tt.args.callid, tt.args.out)
 			res := <-out
 			if !reflect.DeepEqual(res, tt.want) {
-				t.Errorf("\ngot : %v\nwant: %s", res, *tt.want)
+				t.Errorf("\ngot : %s\nwant: %s", *res, *tt.want)
 			}
 		})
 	}
@@ -268,7 +284,7 @@ func TestFromFilterGetCmdParameter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ff := FromFilter{}
 			if got := ff.GetCmdParameter(tt.args.s); got != tt.want {
-				t.Errorf("FromFilter.GetCmdParameter() = %v, want %v", got, tt.want)
+				t.Errorf("FromFilter.GetCmdParameter() = %s, want %s", got, tt.want)
 			}
 		})
 	}
@@ -298,7 +314,7 @@ func TestToFilterGetCmdParameter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tf := ToFilter{}
 			if got := tf.GetCmdParameter(tt.args.s); got != tt.want {
-				t.Errorf("ToFilter.GetCmdParameter() = %v, want %v", got, tt.want)
+				t.Errorf("ToFilter.GetCmdParameter() = %s, want %s", got, tt.want)
 			}
 		})
 	}

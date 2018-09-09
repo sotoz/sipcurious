@@ -16,6 +16,7 @@ type Result struct {
 	Method            []byte
 	StatusCode        []byte
 	StatusDescription []byte
+	Contact           []byte
 }
 
 // Filter serves as an interface for all filters that can be attached on a siptrace.
@@ -46,11 +47,13 @@ func (ff FromFilter) Search(sipPacket siprocket.SipMsg, from string, out chan<- 
 
 	var r Result
 	if strings.Contains(strings.ToLower(string(sipPacket.From.User)), from) {
-		r.From = sipPacket.From.User
-		r.To = sipPacket.To.User
+		r.From = sipPacket.From.Src
+		r.To = sipPacket.To.Src
 		r.CallID = sipPacket.CallId.Value
+		r.Method = sipPacket.Req.Method
 		r.StatusCode = sipPacket.Req.StatusCode
 		r.StatusDescription = sipPacket.Req.StatusDesc
+		r.Contact = sipPacket.Contact.Src
 
 		out <- &r
 	}
@@ -71,11 +74,13 @@ func (tf ToFilter) Search(sipPacket siprocket.SipMsg, to string, out chan<- *Res
 	var r Result
 
 	if strings.Contains(strings.ToLower(string(sipPacket.To.User)), to) {
-		r.From = sipPacket.From.User
-		r.To = sipPacket.To.User
+		r.From = sipPacket.From.Src
+		r.To = sipPacket.To.Src
 		r.CallID = sipPacket.CallId.Value
+		r.Method = sipPacket.Req.Method
 		r.StatusCode = sipPacket.Req.StatusCode
 		r.StatusDescription = sipPacket.Req.StatusDesc
+		r.Contact = sipPacket.Contact.Src
 
 		out <- &r
 	}
@@ -94,11 +99,13 @@ func (cidf CallIDFilter) Search(sipPacket siprocket.SipMsg, cid string, out chan
 	}
 	var r Result
 	if strings.Contains(strings.ToLower(string(sipPacket.CallId.Value)), cid) {
-		r.From = sipPacket.From.User
-		r.To = sipPacket.To.User
+		r.From = sipPacket.From.Src
+		r.To = sipPacket.To.Src
 		r.CallID = sipPacket.CallId.Value
+		r.Method = sipPacket.Req.Method
 		r.StatusCode = sipPacket.Req.StatusCode
 		r.StatusDescription = sipPacket.Req.StatusDesc
+		r.Contact = sipPacket.Contact.Src
 
 		out <- &r
 	}

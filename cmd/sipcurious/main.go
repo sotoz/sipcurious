@@ -15,6 +15,7 @@ var (
 	callid = flag.String("callid", "", "SIP Call-ID header")
 	unique = flag.Bool("unique", false, "Show only the first packet that satisfy the filters from the SIP trace. Usually this is the INVITE. This parameter will make sipcurious to be faster and return the first result for each occurence.")
 	help   = flag.Bool("help", false, "Display usage help")
+	extra  = flag.Bool("extra", false, "Show extra information (contact header etc)")
 )
 
 type searchParams struct {
@@ -81,7 +82,11 @@ func showResults(fp []Result) {
 	}
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
-	fmt.Fprintln(w, fmt.Sprintf("Info\tCallID\tFrom\tTo\t"))
+	if *extra {
+		fmt.Fprintln(w, fmt.Sprintf("Info\tCallID\tFrom\tTo\tContact\t"))
+	} else {
+		fmt.Fprintln(w, fmt.Sprintf("Info\tCallID\tFrom\tTo\t"))
+	}
 	var info string
 	for _, pk := range fp {
 		if len(pk.Method) == 0 {
@@ -89,7 +94,12 @@ func showResults(fp []Result) {
 		} else {
 			info = fmt.Sprintf("%s", string(pk.Method))
 		}
-		fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t", info, pk.CallID, pk.From, pk.To))
+		if *extra {
+			fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t", info, pk.CallID, pk.From, pk.To, pk.Contact))
+		} else {
+			fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t", info, pk.CallID, pk.From, pk.To))
+		}
 	}
+
 	w.Flush()
 }
