@@ -9,7 +9,6 @@ import (
 )
 
 func TestSearchFilters(t *testing.T) {
-
 	packet1 := siprocket.SipMsg{}
 	packet1.CallId.Value = []byte("callid")
 	packet1.From.User = []byte("from123")
@@ -87,12 +86,10 @@ func TestFromFilterSearch(t *testing.T) {
 	packet1.From.Src = []byte("sip:from123@siptest.com")
 	packet1.To.Src = []byte("sip:to456@siptest.com")
 	packet1.Contact.Src = []byte("contact")
-	out := make(chan *Result)
 
 	type args struct {
 		sipPacket siprocket.SipMsg
 		from      string
-		out       chan<- *Result
 	}
 	tests := []struct {
 		name string
@@ -104,7 +101,6 @@ func TestFromFilterSearch(t *testing.T) {
 			args{
 				packet1,
 				"123",
-				out,
 			},
 			&Result{
 				[]byte("sip:from123@siptest.com"),
@@ -121,8 +117,7 @@ func TestFromFilterSearch(t *testing.T) {
 			"from-filter-test-2-no-results",
 			args{
 				packet1,
-				"123",
-				out,
+				"no-find",
 			},
 			nil,
 		},
@@ -130,8 +125,7 @@ func TestFromFilterSearch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ff := FromFilter{}
-			go ff.Search(tt.args.sipPacket, tt.args.from, tt.args.out)
-			res := <-out
+			res := ff.Search(tt.args.sipPacket, tt.args.from)
 			if !reflect.DeepEqual(res, tt.want) {
 				t.Errorf("\ngot : %s\nwant: %s", res, *tt.want)
 			}
@@ -147,12 +141,10 @@ func TestToFilterSearch(t *testing.T) {
 	packet1.From.Src = []byte("sip:from123@siptest.com")
 	packet1.To.Src = []byte("sip:to456@siptest.com")
 	packet1.Contact.Src = []byte("contact")
-	out := make(chan *Result)
 
 	type args struct {
 		sipPacket siprocket.SipMsg
-		from      string
-		out       chan<- *Result
+		to        string
 	}
 	tests := []struct {
 		name string
@@ -164,7 +156,6 @@ func TestToFilterSearch(t *testing.T) {
 			args{
 				packet1,
 				"456",
-				out,
 			},
 			&Result{
 				[]byte("sip:from123@siptest.com"),
@@ -181,8 +172,7 @@ func TestToFilterSearch(t *testing.T) {
 			"to-filter-test-2-no-results",
 			args{
 				packet1,
-				"123",
-				out,
+				"no-find",
 			},
 			nil,
 		},
@@ -190,8 +180,7 @@ func TestToFilterSearch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ff := ToFilter{}
-			go ff.Search(tt.args.sipPacket, tt.args.from, tt.args.out)
-			res := <-out
+			res := ff.Search(tt.args.sipPacket, tt.args.to)
 			if !reflect.DeepEqual(res, tt.want) {
 				t.Errorf("\ngot : %s\nwant: %s", res, *tt.want)
 			}
@@ -206,12 +195,10 @@ func TestCallIDFilterSearch(t *testing.T) {
 	packet1.From.Src = []byte("sip:from123@siptest.com")
 	packet1.To.Src = []byte("sip:to456@siptest.com")
 	packet1.Contact.Src = []byte("contact")
-	out := make(chan *Result)
 
 	type args struct {
 		sipPacket siprocket.SipMsg
 		callid    string
-		out       chan<- *Result
 	}
 	tests := []struct {
 		name string
@@ -223,7 +210,6 @@ func TestCallIDFilterSearch(t *testing.T) {
 			args{
 				packet1,
 				"wewantthiscallid",
-				out,
 			},
 			&Result{
 				[]byte("sip:from123@siptest.com"),
@@ -241,7 +227,6 @@ func TestCallIDFilterSearch(t *testing.T) {
 			args{
 				packet1,
 				"123",
-				out,
 			},
 			nil,
 		},
@@ -249,8 +234,7 @@ func TestCallIDFilterSearch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ff := CallIDFilter{}
-			go ff.Search(tt.args.sipPacket, tt.args.callid, tt.args.out)
-			res := <-out
+			res := ff.Search(tt.args.sipPacket, tt.args.callid)
 			if !reflect.DeepEqual(res, tt.want) {
 				t.Errorf("\ngot : %s\nwant: %s", *res, *tt.want)
 			}
@@ -317,5 +301,30 @@ func TestToFilterGetCmdParameter(t *testing.T) {
 				t.Errorf("ToFilter.GetCmdParameter() = %s, want %s", got, tt.want)
 			}
 		})
+	}
+}
+
+func BenchmarkSearchFilters(b *testing.B) {
+
+	packet1 := siprocket.SipMsg{}
+	packet1.CallId.Value = []byte("callid")
+	packet1.From.User = []byte("from123")
+	packet1.To.User = []byte("to456")
+	packet1.From.Src = []byte("sip:from123@siptest.com")
+	packet1.To.Src = []byte("sip:to456@siptest.com")
+	packet1.Contact.Src = []byte("contact")
+
+	var packets []siprocket.SipMsg
+
+	for k := 0; k <= 5000; k++ {
+		packets = append(packets, packet1)
+	}
+	sp := searchParams{
+		"to123",
+		"from456",
+		"callidyolo",
+	}
+	for n := 0; n <= 10; n++ {
+		searchFilters(packets, sp)
 	}
 }

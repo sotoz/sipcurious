@@ -59,8 +59,8 @@ func main() {
 	}
 
 	sp := searchParams{
-		*from,
 		*to,
+		*from,
 		*callid,
 	}
 	// Search the SIP packets for the filters

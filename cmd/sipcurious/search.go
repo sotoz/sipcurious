@@ -7,6 +7,10 @@ import (
 	"github.com/marv2097/siprocket"
 )
 
+var (
+	filters = []Filter{ToFilter{}, FromFilter{}, CallIDFilter{}}
+)
+
 // Result describes a Result struct.
 type Result struct {
 	From              []byte
@@ -21,7 +25,7 @@ type Result struct {
 
 // Filter serves as an interface for all filters that can be attached on a siptrace.
 type Filter interface {
-	Search(siprocket.SipMsg, string, chan<- *Result)
+	Search(siprocket.SipMsg, string) *Result
 	GetCmdParameter(searchParams) string
 }
 
@@ -40,9 +44,9 @@ func (ff FromFilter) GetCmdParameter(s searchParams) string {
 }
 
 // Search will search inside the sipPacket whether the from filter exists.
-func (ff FromFilter) Search(sipPacket siprocket.SipMsg, from string, out chan<- *Result) {
+func (ff FromFilter) Search(sipPacket siprocket.SipMsg, from string) *Result {
 	if from == "" {
-		out <- nil
+		return nil
 	}
 
 	var r Result
@@ -55,10 +59,10 @@ func (ff FromFilter) Search(sipPacket siprocket.SipMsg, from string, out chan<- 
 		r.StatusDescription = sipPacket.Req.StatusDesc
 		r.Contact = sipPacket.Contact.Src
 
-		out <- &r
+		return &r
 	}
 
-	out <- nil
+	return nil
 }
 
 // GetCmdParameter returns the command line parameter's value for that filter
@@ -67,9 +71,9 @@ func (tf ToFilter) GetCmdParameter(s searchParams) string {
 }
 
 // Search will search for the <to> inside the sipPacket
-func (tf ToFilter) Search(sipPacket siprocket.SipMsg, to string, out chan<- *Result) {
+func (tf ToFilter) Search(sipPacket siprocket.SipMsg, to string) *Result {
 	if to == "" {
-		out <- nil
+		return nil
 	}
 	var r Result
 
@@ -82,9 +86,9 @@ func (tf ToFilter) Search(sipPacket siprocket.SipMsg, to string, out chan<- *Res
 		r.StatusDescription = sipPacket.Req.StatusDesc
 		r.Contact = sipPacket.Contact.Src
 
-		out <- &r
+		return &r
 	}
-	out <- nil
+	return nil
 }
 
 // GetCmdParameter returns the command line parameter's value for that filter
@@ -93,9 +97,9 @@ func (cidf CallIDFilter) GetCmdParameter(s searchParams) string {
 }
 
 // Search will search if the specified packet includes the call id that we are searching.
-func (cidf CallIDFilter) Search(sipPacket siprocket.SipMsg, cid string, out chan<- *Result) {
+func (cidf CallIDFilter) Search(sipPacket siprocket.SipMsg, cid string) *Result {
 	if cid == "" {
-		out <- nil
+		return nil
 	}
 	var r Result
 	if strings.Contains(strings.ToLower(string(sipPacket.CallId.Value)), cid) {
@@ -107,29 +111,38 @@ func (cidf CallIDFilter) Search(sipPacket siprocket.SipMsg, cid string, out chan
 		r.StatusDescription = sipPacket.Req.StatusDesc
 		r.Contact = sipPacket.Contact.Src
 
-		out <- &r
+		return &r
 	}
-	out <- nil
+	return nil
 }
 
 func searchFilters(sipPackets []siprocket.SipMsg, sp searchParams) []Result {
 	var results []Result
+	c := make(chan *Result)
 
-	for _, sipPacket := range sipPackets {
-		filters := []Filter{ToFilter{}, FromFilter{}, CallIDFilter{}}
-		for _, filter := range filters {
-			rc := make(chan *Result)
+	for _, sipp := range sipPackets {
+		go func(sipPacket siprocket.SipMsg) {
+			for _, filter := range filters {
+				res := filter.Search(sipPacket, filter.GetCmdParameter(sp))
+				if res == nil {
+					c <- nil
+				}
 
-			go filter.Search(sipPacket, filter.GetCmdParameter(sp), rc)
-			res := <-rc
-			if res == nil {
-				continue
+				c <- res
 			}
-			results = append(results, *res)
+		}(sipp)
+	}
+
+	for i := 0; i <= len(sipPackets); i++ {
+		result := <-c
+		if result == nil {
+			continue
 		}
 		if *unique && len(results) > 0 {
 			break
 		}
+		results = append(results, *result)
 	}
+
 	return results
 }
