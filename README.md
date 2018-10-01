@@ -3,22 +3,24 @@
 Sipcurious is a command line utility that parses SIP pcap files and filters out SIP packets based on the parameters given.
 It can be used for searching if a number exists in dialogs in big pcap files that are hard to open with wireshark or other SIP trace viewing utilities.
 
+Latest version v1.1
+
 ### Usage
 ```
 $ sipcurious --file my_super_trace.pcap --to 12345 --from 67890
 Found 3 packets
-Info		CallID					From		To
-INVITE		533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
-403 Forbidden	533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
-ACK		533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
+Timestamp                       Info		CallID					From		To
+2005-07-04T11:56:58+02:00       INVITE		533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
+2005-07-04T11:56:59+02:00       403 Forbidden	533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
+2005-07-04T11:57:00+02:00       ACK		533788078C449C0BB69E5497@0270ffffffff	+123458861760	+678903997371
 ```
 
 Another example of usage that shows the `unique` flag and the `callid` filter:
 ```
 $ sipcurious --file cmd/sipcurious/aaa.pcap --callid 29858 -unique
 The --unique flag was used. Showing only the first packet found.
-Info    CallID                                  From            To
-        29858147-465b0752@29858051-465b07b2     35104723        35104723
+Timestamp                        Info    CallID                                  From            To
+2005-07-04T11:56:58+02:00        29858147-465b0752@29858051-465b07b2     35104723        35104723
 ```
 
 ### Building from source
@@ -31,7 +33,6 @@ Or instead of doing the `go build`, you can use the Makefile by doing a
 $ make all
 ```
 ## Todo:
-- Correctly show the timestamp of a packet.
 - Parse more than one files at the same time.
 - Add filters based on Request URI, Source IP.
 - Properly show results per SIP dialog and show the dialog in a graph as well.

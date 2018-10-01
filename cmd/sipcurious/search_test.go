@@ -4,27 +4,25 @@ import (
 	"reflect"
 	"testing"
 	"time"
-
-	"github.com/marv2097/siprocket"
 )
 
 func TestSearchFilters(t *testing.T) {
-	packet1 := siprocket.SipMsg{}
-	packet1.CallId.Value = []byte("callid")
-	packet1.From.User = []byte("from123")
-	packet1.To.User = []byte("to456")
-	packet1.From.Src = []byte("sip:from123@siptest.com")
-	packet1.To.Src = []byte("sip:to456@siptest.com")
-	packet1.Contact.Src = []byte("contact")
+	packet1 := sipMessage{}
+	packet1.pct.CallId.Value = []byte("callid")
+	packet1.pct.From.User = []byte("from123")
+	packet1.pct.To.User = []byte("to456")
+	packet1.pct.From.Src = []byte("sip:from123@siptest.com")
+	packet1.pct.To.Src = []byte("sip:to456@siptest.com")
+	packet1.pct.Contact.Src = []byte("contact")
 	tests := []struct {
 		name       string
-		sipPackets []siprocket.SipMsg
+		sipPackets []sipMessage
 		sp         searchParams
 		want       []Result
 	}{
 		{
 			"test-two-results",
-			[]siprocket.SipMsg{
+			[]sipMessage{
 				packet1,
 			},
 			searchParams{
@@ -57,7 +55,7 @@ func TestSearchFilters(t *testing.T) {
 		},
 		{
 			"test-no-results",
-			[]siprocket.SipMsg{
+			[]sipMessage{
 				packet1,
 			},
 			searchParams{
@@ -79,16 +77,16 @@ func TestSearchFilters(t *testing.T) {
 }
 
 func TestFromFilterSearch(t *testing.T) {
-	packet1 := siprocket.SipMsg{}
-	packet1.CallId.Value = []byte("callid")
-	packet1.From.User = []byte("from123")
-	packet1.To.User = []byte("to456")
-	packet1.From.Src = []byte("sip:from123@siptest.com")
-	packet1.To.Src = []byte("sip:to456@siptest.com")
-	packet1.Contact.Src = []byte("contact")
+	packet1 := sipMessage{}
+	packet1.pct.CallId.Value = []byte("callid")
+	packet1.pct.From.User = []byte("from123")
+	packet1.pct.To.User = []byte("to456")
+	packet1.pct.From.Src = []byte("sip:from123@siptest.com")
+	packet1.pct.To.Src = []byte("sip:to456@siptest.com")
+	packet1.pct.Contact.Src = []byte("contact")
 
 	type args struct {
-		sipPacket siprocket.SipMsg
+		sipPacket sipMessage
 		from      string
 	}
 	tests := []struct {
@@ -134,16 +132,16 @@ func TestFromFilterSearch(t *testing.T) {
 }
 
 func TestToFilterSearch(t *testing.T) {
-	packet1 := siprocket.SipMsg{}
-	packet1.CallId.Value = []byte("callid")
-	packet1.From.User = []byte("from123")
-	packet1.To.User = []byte("to456")
-	packet1.From.Src = []byte("sip:from123@siptest.com")
-	packet1.To.Src = []byte("sip:to456@siptest.com")
-	packet1.Contact.Src = []byte("contact")
+	packet1 := sipMessage{}
+	packet1.pct.CallId.Value = []byte("callid")
+	packet1.pct.From.User = []byte("from123")
+	packet1.pct.To.User = []byte("to456")
+	packet1.pct.From.Src = []byte("sip:from123@siptest.com")
+	packet1.pct.To.Src = []byte("sip:to456@siptest.com")
+	packet1.pct.Contact.Src = []byte("contact")
 
 	type args struct {
-		sipPacket siprocket.SipMsg
+		sipPacket sipMessage
 		to        string
 	}
 	tests := []struct {
@@ -188,16 +186,16 @@ func TestToFilterSearch(t *testing.T) {
 	}
 }
 func TestCallIDFilterSearch(t *testing.T) {
-	packet1 := siprocket.SipMsg{}
-	packet1.CallId.Value = []byte("wewantthiscallid")
-	packet1.From.User = []byte("from123")
-	packet1.To.User = []byte("to456")
-	packet1.From.Src = []byte("sip:from123@siptest.com")
-	packet1.To.Src = []byte("sip:to456@siptest.com")
-	packet1.Contact.Src = []byte("contact")
+	packet1 := sipMessage{}
+	packet1.pct.CallId.Value = []byte("wewantthiscallid")
+	packet1.pct.From.User = []byte("from123")
+	packet1.pct.To.User = []byte("to456")
+	packet1.pct.From.Src = []byte("sip:from123@siptest.com")
+	packet1.pct.To.Src = []byte("sip:to456@siptest.com")
+	packet1.pct.Contact.Src = []byte("contact")
 
 	type args struct {
-		sipPacket siprocket.SipMsg
+		sipPacket sipMessage
 		callid    string
 	}
 	tests := []struct {
@@ -304,19 +302,19 @@ func TestToFilterGetCmdParameter(t *testing.T) {
 	}
 }
 
-func BenchmarkSearchFilters(b *testing.B) {
+func benchmarkSearchFilters(i int, b *testing.B) {
 
-	packet1 := siprocket.SipMsg{}
-	packet1.CallId.Value = []byte("callid")
-	packet1.From.User = []byte("from123")
-	packet1.To.User = []byte("to456")
-	packet1.From.Src = []byte("sip:from123@siptest.com")
-	packet1.To.Src = []byte("sip:to456@siptest.com")
-	packet1.Contact.Src = []byte("contact")
+	packet1 := sipMessage{}
+	packet1.pct.CallId.Value = []byte("callid")
+	packet1.pct.From.User = []byte("from123")
+	packet1.pct.To.User = []byte("to456")
+	packet1.pct.From.Src = []byte("sip:from123@siptest.com")
+	packet1.pct.To.Src = []byte("sip:to456@siptest.com")
+	packet1.pct.Contact.Src = []byte("contact")
 
-	var packets []siprocket.SipMsg
+	var packets []sipMessage
 
-	for k := 0; k <= 5000; k++ {
+	for k := 0; k <= i; k++ {
 		packets = append(packets, packet1)
 	}
 	sp := searchParams{
@@ -324,7 +322,12 @@ func BenchmarkSearchFilters(b *testing.B) {
 		"from456",
 		"callidyolo",
 	}
-	for n := 0; n <= 10; n++ {
+	for n := 0; n <= b.N; n++ {
 		searchFilters(packets, sp)
 	}
 }
+
+func BenchmarkSearchFilters10(b *testing.B)    { benchmarkSearchFilters(10, b) }
+func BenchmarkSearchFilters100(b *testing.B)   { benchmarkSearchFilters(100, b) }
+func BenchmarkSearchFilters1000(b *testing.B)  { benchmarkSearchFilters(1000, b) }
+func BenchmarkSearchFilters10000(b *testing.B) { benchmarkSearchFilters(10000, b) }

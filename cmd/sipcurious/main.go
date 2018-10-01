@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
+	"time"
 )
 
 var (
@@ -83,9 +84,9 @@ func showResults(fp []Result) {
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
 	if *extra {
-		fmt.Fprintln(w, fmt.Sprintf("Info\tCallID\tFrom\tTo\tContact\t"))
+		fmt.Fprintln(w, fmt.Sprintf("Timestamp\tInfo\tCallID\tFrom\tTo\tContact\t"))
 	} else {
-		fmt.Fprintln(w, fmt.Sprintf("Info\tCallID\tFrom\tTo\t"))
+		fmt.Fprintln(w, fmt.Sprintf("Timestamp\tInfo\tCallID\tFrom\tTo\t"))
 	}
 	var info string
 	for _, pk := range fp {
@@ -95,9 +96,9 @@ func showResults(fp []Result) {
 			info = fmt.Sprintf("%s", string(pk.Method))
 		}
 		if *extra {
-			fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t", info, pk.CallID, pk.From, pk.To, pk.Contact))
+			fmt.Fprintln(w, fmt.Sprintf("%v\t%s\t%s\t%s\t%s\t%s\t", time.Unix(int64(pk.Timestamp.Seconds()), 0).Format(time.RFC3339), info, pk.CallID, pk.From, pk.To, pk.Contact))
 		} else {
-			fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s\t", info, pk.CallID, pk.From, pk.To))
+			fmt.Fprintln(w, fmt.Sprintf("%v\t%s\t%s\t%s\t%s\t", time.Unix(int64(pk.Timestamp.Seconds()), 0).Format(time.RFC3339), info, pk.CallID, pk.From, pk.To))
 		}
 	}
 

@@ -4,10 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/marv2097/siprocket"
 	"github.com/sotoz/gopcap/pkg/gopcap"
 )
+
+type sipMessage struct {
+	pct       siprocket.SipMsg
+	timestamp time.Duration
+}
 
 func parsePcapFile(file string) (gopcap.PcapFile, error) {
 	if file == "" {
@@ -22,9 +28,10 @@ func parsePcapFile(file string) (gopcap.PcapFile, error) {
 	return parsed, nil
 }
 
-func parseSIPTrace(trace gopcap.PcapFile) ([]siprocket.SipMsg, error) {
-	var results []siprocket.SipMsg
+func parseSIPTrace(trace gopcap.PcapFile) ([]sipMessage, error) {
+	var results []sipMessage
 	for _, packet := range trace.Packets {
+		var r sipMessage
 		d := packet.Data
 		if d == nil {
 			continue
@@ -37,7 +44,9 @@ func parseSIPTrace(trace gopcap.PcapFile) ([]siprocket.SipMsg, error) {
 		}
 
 		sipPacket := siprocket.Parse(td)
-		results = append(results, sipPacket)
+		r.pct = sipPacket
+		r.timestamp = packet.Timestamp
+		results = append(results, r)
 	}
 	return results, nil
 }
