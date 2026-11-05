@@ -1,0 +1,8 @@
+# Keep LF line endings on every platform: gofmt, golden test files and the
+# generated samples must be byte-identical on Windows checkouts.
+* text=auto eol=lf
+*.pcap binary
+*.pcapng binary
+*.cap binary
+*.gz binary
+*.zip binary
