@@ -1,106 +1,39 @@
+// Command sipcurious troubleshoots SIP/VoIP calls from pcap files. All logic
+// lives in internal/cli; main only wires signals, the version and the exit code.
 package main
 
 import (
-	"flag"
+	"context"
 	"fmt"
 	"os"
-	"strings"
-	"text/tabwriter"
+	"os/signal"
 	"time"
+
+	"github.com/sotoz/sipcurious/internal/cli"
 )
 
-var (
-	file   = flag.String("file", "", "The SIP pcap file that will be parsed")
-	to     = flag.String("to", "", "SIP To: Header")
-	from   = flag.String("from", "", "SIP From: Header")
-	callid = flag.String("callid", "", "SIP Call-ID header")
-	unique = flag.Bool("unique", false, "Show only the first packet that satisfy the filters from the SIP trace. Usually this is the INVITE. This parameter will make sipcurious to be faster and return the first result for each occurence.")
-	help   = flag.Bool("help", false, "Display usage help")
-	extra  = flag.Bool("extra", false, "Show extra information (contact header etc)")
-)
+// version is stamped at build time: go build -ldflags "-X main.version=v2.0.0".
+var version = "dev"
 
-type searchParams struct {
-	to     string
-	from   string
-	callid string
-}
+// interruptGrace is how long a cancelled run may take to wind down before the
+// process gives up (a read blocked on stdin cannot be cancelled).
+const interruptGrace = 2 * time.Second
 
 func main() {
-	flag.Usage = func() {
-		fmt.Printf("Usage: %s \n", os.Args[0])
-		fmt.Println("If no `--to` and `--from` are specified then the program will output `To:` and `From:` from all SIP dialogs.")
-		fmt.Println("Parameters:")
-		flag.PrintDefaults()
-	}
-
-	flag.Parse()
-
-	if *help {
-		flag.Usage()
-		return
-	}
-
-	if *file == "" {
-		errorOut("you need to specify the file with --file")
-	}
-
-	*from = strings.ToLower(*from)
-	*to = strings.ToLower(*to)
-	*callid = strings.ToLower(*callid)
-
-	trace, err := parsePcapFile(*file)
-	if err != nil {
-		errorOut(fmt.Sprintf("cannot parse SIP trace: %s", err))
-	}
-
-	// Parse the the SIP data
-	fp, err := parseSIPTrace(trace)
-	if err != nil {
-		errorOut(err.Error())
-	}
-
-	sp := searchParams{
-		*to,
-		*from,
-		*callid,
-	}
-	// Search the SIP packets for the filters
-	fr := searchFilters(fp, sp)
-
-	showResults(fr)
-}
-
-func showResults(fp []Result) {
-	totalPackets := len(fp)
-	if totalPackets <= 0 {
-		fmt.Println("No Packets found for the filters you provided.")
-		os.Exit(0)
-	}
-	if *unique {
-		fmt.Println("The --unique flag was used. Showing only the first packet found.")
-	} else {
-		fmt.Printf("Found %v packets\n", len(fp))
-	}
-	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 0, 8, 2, '\t', tabwriter.AlignRight)
-	if *extra {
-		fmt.Fprintln(w, fmt.Sprintf("Timestamp\tInfo\tCallID\tFrom\tTo\tContact\t"))
-	} else {
-		fmt.Fprintln(w, fmt.Sprintf("Timestamp\tInfo\tCallID\tFrom\tTo\t"))
-	}
-	var info string
-	for _, pk := range fp {
-		if len(pk.Method) == 0 {
-			info = fmt.Sprintf("%s %s", pk.StatusCode, pk.StatusDescription)
-		} else {
-			info = fmt.Sprintf("%s", string(pk.Method))
-		}
-		if *extra {
-			fmt.Fprintln(w, fmt.Sprintf("%v\t%s\t%s\t%s\t%s\t%s\t", time.Unix(int64(pk.Timestamp.Seconds()), 0).Format(time.RFC3339), info, pk.CallID, pk.From, pk.To, pk.Contact))
-		} else {
-			fmt.Fprintln(w, fmt.Sprintf("%v\t%s\t%s\t%s\t%s\t", time.Unix(int64(pk.Timestamp.Seconds()), 0).Format(time.RFC3339), info, pk.CallID, pk.From, pk.To))
-		}
-	}
-
-	w.Flush()
+	ctx, cancel := context.WithCancel(context.Background())
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt)
+	go func() {
+		<-sigs
+		cancel()
+		// Restore the default disposition: a second Ctrl-C kills the process
+		// immediately. If the run does not stop by itself, do it ourselves.
+		signal.Stop(sigs)
+		time.Sleep(interruptGrace)
+		fmt.Fprintln(os.Stderr, "sipcurious: interrupted")
+		os.Exit(cli.ExitSignal)
+	}()
+	code := cli.Main(ctx, &cli.Env{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin, Version: version}, os.Args[1:])
+	cancel()
+	os.Exit(code)
 }
