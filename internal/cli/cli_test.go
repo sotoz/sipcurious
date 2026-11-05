@@ -1024,7 +1024,7 @@ func TestCompletion(t *testing.T) {
 		}
 		script := filepath.Join(t.TempDir(), "c.bash")
 		os.WriteFile(script, []byte(run(t, nil, "completion", "bash").stdout), 0o644)
-		probe := `source ` + script + `
+		probe := `source '` + filepath.ToSlash(script) + `'
 COMP_WORDS=(sipcurious calls --so); COMP_CWORD=2; _sipcurious; echo "flags: ${COMPREPLY[*]}"
 COMP_WORDS=(sipcurious ca); COMP_CWORD=1; _sipcurious; echo "cmds: ${COMPREPLY[*]}"
 COMP_WORDS=(sipcurious calls --sort ""); COMP_CWORD=3; _sipcurious; echo "vals: ${COMPREPLY[*]}"
